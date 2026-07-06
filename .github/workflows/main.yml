@@ -1,0 +1,36 @@
+name: Compilar VST3 (Windows)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Descargar el codigo del proyecto
+        uses: actions/checkout@v4
+
+      - name: Descargar JUCE 8.0.6
+        run: git clone --depth 1 --branch 8.0.6 https://github.com/juce-framework/JUCE.git libs/JUCE
+
+      - name: Configurar con CMake
+        run: cmake -B build -S . -G "Visual Studio 17 2022" -A x64
+
+      - name: Compilar (Release)
+        run: cmake --build build --config Release
+
+      - name: Empaquetar el VST3 resultante
+        shell: bash
+        run: |
+          mkdir -p artefacto
+          cp -r "build/EstacionFinal_artefacts/Release/VST3/Estacion Final.vst3" artefacto/
+
+      - name: Publicar el VST3 como artefacto descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: EstacionFinal-VST3-Windows
+          path: artefacto/Estacion Final.vst3
+          retention-days: 30
+      
